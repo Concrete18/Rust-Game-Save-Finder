@@ -5,11 +5,29 @@ import "./App.css";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const [gameName, setGameName] = useState("");
 
   async function greet() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name }));
+
+
+    let dirsToCheck = [
+      "C:/Program Files (x86)/Steam/steamapps/common",
+      "P:/SteamLibrary/steamapps/common/",
+      "C:/Users/Michael/AppData/LocalLow",
+      "C:/Users/Michael/AppData/Roaming",
+      "C:/Users/Michael/AppData/Local",
+      "C:/Users/Michael/Saved Games",
+      "C:/Users/Michael/Documents",
+      "D:/My Installed Games/Steam Games/steamapps/common",
+      "D:/My Documents",
+    ]
+
+    console.log(gameName, dirsToCheck)
+
+    let saveLocation: string = await invoke("find_game_save_path", { gameName, dirsToCheck })
+
+    setGreetMsg(saveLocation);
   }
 
   return (
@@ -39,7 +57,7 @@ function App() {
       >
         <input
           id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
+          onChange={(e) => setGameName(e.currentTarget.value)}
           placeholder="Enter a name..."
         />
         <button type="submit">Greet</button>
