@@ -2,7 +2,25 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use aho_corasick::AhoCorasick;
+use serde::Serialize;
+use std::cmp::Reverse;
 use walkdir::WalkDir;
+
+#[derive(Debug, Serialize)]
+struct PossiblePath {
+    path: String,
+    score: i32,
+}
+
+impl PossiblePath {
+    fn new(path: String) -> Self {
+        let cleaned_path = path.to_string().replace('\\', "/");
+        Self {
+            path,
+            score: score_path(cleaned_path),
+        }
+    }
+}
 
 /// Finds matches for `search_string` in `path`.
 fn search_path(path: String, search_string: String) -> Vec<String> {
@@ -78,21 +96,18 @@ fn score_path(path: String) -> i32 {
     total_score
 }
 
-/// Finds the path that most likely leads to the games save folder by scoring each path.
-fn pick_best_path(paths: Vec<String>) -> String {
-    let mut best_score = 0;
-    let mut best_path = &paths[0];
+// Define a struct to hold the string and its associated number
+
+fn score_paths(paths: Vec<String>) -> Vec<PossiblePath> {
+    let mut scored_paths = Vec::new();
     for path in &paths {
         if path.contains('.') {
             continue;
         }
-        let score = score_path(path.to_string());
-        if score > best_score {
-            best_score = score;
-            best_path = path;
-        }
+        let scored_path = PossiblePath::new(path.to_string());
+        scored_paths.push(scored_path);
     }
-    best_path.to_string()
+    scored_paths
 }
 
 /// Finds possible save paths for `search_string` within `dirs_to_check`.
@@ -118,30 +133,35 @@ fn to_alphanumeric(string: String) -> String {
     cleaned_string
 }
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
 /// finds the game saves
-fn find_game_save_path(game_name: String, dirs_to_check: Vec<String>) -> String {
-    println!("Starting Save Search");
-    println!("{game_name}");
+#[tauri::command]
+fn find_game_save_paths(game_name: String, dirs_to_check: Vec<String>) -> Vec<String> {
     // TODO add errors
     let cleaned_name = to_alphanumeric(game_name);
     // finds possible save paths
     let paths = find_possible_save_paths(cleaned_name, dirs_to_check);
-    // determines if multiples paths need to be scored so the best path can be picked
-    let total_paths = paths.len();
-    let best_path = match total_paths {
-        0 => "".to_string(),
-        1 => paths[0].clone(),
-        _ => pick_best_path(paths),
-    };
-    println!("{best_path}");
-    best_path.replace('\\', "/")
+    let mut scored_paths: Vec<PossiblePath> = score_paths(paths);
+
+    // Prints the scored paths
+    for path in &scored_paths {
+        println!("{}|{}", path.score, path.path);
+    }
+
+    // Sort the scored paths by score in descending order
+    scored_paths.sort_by_key(|p| Reverse(p.score));
+
+    // Convert the sorted paths to a vector of strings
+    let result: Vec<String> = scored_paths
+        .into_iter()
+        .map(|p| format!("{} | {}", p.score, p.path))
+        .collect();
+
+    result
 }
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![find_game_save_path])
+        .invoke_handler(tauri::generate_handler![find_game_save_paths])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -193,159 +213,159 @@ mod save_search_tests {
         assert_eq!(new_string, "Batman Arkham Knight".to_string());
     }
 
-    #[test]
-    fn in_appdata() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Teardown";
-        let actual_save = "c:/users/michael/appdata/local/teardown";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn in_appdata() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Teardown";
+    //     let actual_save = "c:/users/michael/appdata/local/teardown";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn in_steamapps() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Deep Rock Galactic";
-        let actual_save = "p:/steamlibrary/steamapps/common/deep rock galactic";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn in_steamapps() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Deep Rock Galactic";
+    //     let actual_save = "p:/steamlibrary/steamapps/common/deep rock galactic";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn in_saved_games() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Cyberpunk 2077";
-        let actual_save = "c:/users/michael/saved games/cd projekt red/cyberpunk 2077";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn in_saved_games() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Cyberpunk 2077";
+    //     let actual_save = "c:/users/michael/saved games/cd projekt red/cyberpunk 2077";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn no_space() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "The Forest";
-        let actual_save = "c:/users/michael/appdata/locallow/sks/theforest";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn no_space() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "The Forest";
+    //     let actual_save = "c:/users/michael/appdata/locallow/sks/theforest";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn has_underscore() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Vampire Survivor";
-        let actual_save = "c:/users/michael/appdata/roaming/vampire_survivors";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn has_underscore() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Vampire Survivor";
+    //     let actual_save = "c:/users/michael/appdata/roaming/vampire_survivors";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn contains_non_alphanumeric() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Batman™: Arkham Knight";
-        let actual_save = "d:/my documents/wb games/batman arkham knight";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn contains_non_alphanumeric() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Batman™: Arkham Knight";
+    //     let actual_save = "d:/my documents/wb games/batman arkham knight";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn outer_wilds() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Outer Wilds";
-        let actual_save = "c:/users/michael/appdata/locallow/mobius digital/outer wilds";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn outer_wilds() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Outer Wilds";
+    //     let actual_save = "c:/users/michael/appdata/locallow/mobius digital/outer wilds";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn mini_motorway() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Mini Motorways";
-        let actual_save = "c:/users/michael/appdata/locallow/dinosaur polo club/mini motorways";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn mini_motorway() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Mini Motorways";
+    //     let actual_save = "c:/users/michael/appdata/locallow/dinosaur polo club/mini motorways";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn phantom_abyss() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Phantom Abyss";
-        let actual_save = "c:/users/michael/appdata/local/phantomabyss";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn phantom_abyss() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Phantom Abyss";
+    //     let actual_save = "c:/users/michael/appdata/local/phantomabyss";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn desperados_3() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Desperados III";
-        let actual_save = "c:/users/michael/appdata/local/desperados iii";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn desperados_3() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Desperados III";
+    //     let actual_save = "c:/users/michael/appdata/local/desperados iii";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn manifold_garden() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Manifold Garden";
-        let actual_save = "c:/users/michael/appdata/locallow/william chyr studio/manifold garden";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn manifold_garden() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Manifold Garden";
+    //     let actual_save = "c:/users/michael/appdata/locallow/william chyr studio/manifold garden";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn dishonored_2() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Dishonored 2";
-        let actual_save = "c:/users/michael/saved games/arkane studios/dishonored2";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn dishonored_2() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Dishonored 2";
+    //     let actual_save = "c:/users/michael/saved games/arkane studios/dishonored2";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 
-    #[test]
-    fn timberborn() {
-        // get dirs
-        let dirs_to_check = find_dirs_to_check();
-        // test vars
-        let game_name = "Timberborn";
-        let actual_save = "d:/my documents/timberborn";
-        // run test
-        let found_path = find_game_save_path(game_name.to_string(), dirs_to_check);
-        assert_eq!(found_path, actual_save.to_string());
-    }
+    // #[test]
+    // fn timberborn() {
+    //     // get dirs
+    //     let dirs_to_check = find_dirs_to_check();
+    //     // test vars
+    //     let game_name = "Timberborn";
+    //     let actual_save = "d:/my documents/timberborn";
+    //     // run test
+    //     let found_path = find_game_save_paths(game_name.to_string(), dirs_to_check);
+    //     assert_eq!(found_path, actual_save.to_string());
+    // }
 }

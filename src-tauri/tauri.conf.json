@@ -21,7 +21,7 @@
       {
         "title": "Game Save Finder",
         "width": 600,
-        "height": 260
+        "height": 336
       }
     ],
     "security": {
@@ -30,7 +30,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "com.concrete.game-save-finder",
       "icon": [
         "icons/Save_icon.ico"
       ]

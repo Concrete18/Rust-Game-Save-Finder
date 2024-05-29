@@ -3,13 +3,11 @@ import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
 
 function App() {
-  const [searchResult, setSearchResult] = useState("");
+  const [searchResult, setSearchResult] = useState<string[]>([]);
   const [gameName, setGameName] = useState("");
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-
-
+  async function findSave() {
+    // TODO switch to using a file for this
     let dirsToCheck = [
       "C:/Program Files (x86)/Steam/steamapps/common",
       "P:/SteamLibrary/steamapps/common/",
@@ -22,11 +20,12 @@ function App() {
       "D:/My Documents",
     ]
 
-    console.log(gameName, dirsToCheck)
-
-    let saveLocation: string = await invoke("find_game_save_path", { gameName, dirsToCheck })
-
-    setSearchResult(saveLocation);
+    if (gameName) {
+      let saveLocation: string[] = await invoke("find_game_save_paths", { gameName, dirsToCheck })
+      setSearchResult(saveLocation);
+    } else {
+      setSearchResult([]);
+    }
   }
 
   return (
@@ -39,18 +38,31 @@ function App() {
         className="row"
         onSubmit={(e) => {
           e.preventDefault();
-          greet();
+          findSave();
         }}
       >
         <input
-          id="greet-input"
+          id="game-input"
           onChange={(e) => setGameName(e.currentTarget.value)}
-          placeholder="Enter a game name."
+          placeholder="Enter Game Name"
         />
         <button type="submit">Save Search</button>
       </form>
 
-      <p>{searchResult}</p>
+      {searchResult.length === 0 ? (
+        <div>
+          <h3>No Save Paths to Show.</h3>
+          <p>Try searching for a game's save path.</p>
+        </div>
+      ) : (
+        // TODO make this scrollable
+        <div className="scroll">
+          {searchResult.map((path, index) => (
+            <p key={index}>{index+1}. {path}</p>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 }
