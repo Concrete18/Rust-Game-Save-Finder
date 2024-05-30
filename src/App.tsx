@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
+import { writeText } from '@tauri-apps/api/clipboard';
 import "./App.css";
 
 interface PossiblePath {
@@ -8,37 +9,27 @@ interface PossiblePath {
 }
 
 function App() {
-  const [searchResult, setSearchResult] = useState<PossiblePath[]>([]);
   const [gameName, setGameName] = useState("");
-
-  const [selectedValue, setSelectedValue] = useState('');
+  const [searchResult, setSearchResult] = useState<PossiblePath[]>([]);
+  const [selectedPath, setSelectedPath] = useState('');
 
   const handleRadioChange = (e: any) => {
     const value = e.target.value;
     console.log(value)
-    setSelectedValue(value);
+    setSelectedPath(value);
   };
 
   const openFilePath = async () => {
-    await invoke("open_path", { path: selectedValue })
+    await invoke("open_path", { path: selectedPath })
+  };
+
+  const copyToClipboard = async () => {
+    await writeText(selectedPath)
   };
 
   async function findSave() {
-    // TODO switch to using a file for this
-    let dirsToCheck = [
-      "C:/Program Files (x86)/Steam/steamapps/common",
-      "P:/SteamLibrary/steamapps/common/",
-      "C:/Users/Michael/AppData/LocalLow",
-      "C:/Users/Michael/AppData/Roaming",
-      "C:/Users/Michael/AppData/Local",
-      "C:/Users/Michael/Saved Games",
-      "C:/Users/Michael/Documents",
-      "D:/My Installed Games/Steam Games/steamapps/common",
-      "D:/My Documents",
-    ]
-
     if (gameName) {
-      let saveLocation: PossiblePath[] = await invoke("find_game_save_paths", { gameName, dirsToCheck })
+      let saveLocation: PossiblePath[] = await invoke("find_game_save_paths", { gameName })
       setSearchResult(saveLocation);
     } else {
       setSearchResult([]);
@@ -83,7 +74,7 @@ function App() {
                     name="radio-checkbox-list"
                     value={item.path}
                     style = {{padding: '1px'}}
-                    checked={selectedValue === item.path}
+                    checked={selectedPath === item.path}
                     defaultChecked={index === 0}
                     onChange={handleRadioChange}
                   />
@@ -92,7 +83,10 @@ function App() {
               </div>
             ))}
           </div>
-          <button className="open-path-button" onClick={openFilePath} >Open Possible Save Path</button>
+          <div className="button-container">
+            <button className="bottom-button" onClick={openFilePath} >Open Possible Save Path</button>
+            <button className="bottom-button" onClick={copyToClipboard} >Copy to Clipboard</button>
+          </div>
         </div>
       )}
 

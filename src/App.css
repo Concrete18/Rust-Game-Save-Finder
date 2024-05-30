@@ -93,9 +93,10 @@ button {
   background-color: #212529;
 }
 
-.open-path-button {
+.bottom-button {
   margin-top: 10px;
   margin-bottom: 5px;
+  margin-right: 10px;
 }
 
 @media (prefers-color-scheme: dark) {

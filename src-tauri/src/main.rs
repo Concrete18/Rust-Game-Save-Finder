@@ -13,11 +13,25 @@ fn open_path(path: String) {
 
 /// finds the game saves
 #[tauri::command]
-fn find_game_save_paths(
-    game_name: String,
-    dirs_to_check: Vec<String>,
-) -> Vec<search::PossiblePath> {
-    // TODO add errors
+fn find_game_save_paths(game_name: String) -> Vec<search::PossiblePath> {
+    let mut dirs_to_check: Vec<String> = vec![
+        "C:/Program Files (x86)/Steam/steamapps/common".to_string(),
+        "C:/Users/Michael/AppData/LocalLow".to_string(),
+        "C:/Users/Michael/AppData/Roaming".to_string(),
+        "C:/Users/Michael/AppData/Local".to_string(),
+        "C:/Users/Michael/Saved Games".to_string(),
+        "C:/Users/Michael/Documents".to_string(),
+    ];
+
+    let mut extra_dirs: Vec<String> = vec![
+        "P:/SteamLibrary/steamapps/common/".to_string(),
+        "D:/My Installed Games/Steam Games/steamapps/common".to_string(),
+        "D:/My Documents".to_string(),
+    ];
+
+    dirs_to_check.append(&mut extra_dirs);
+
+    // TODO add errors checking
     let cleaned_name = search::to_alphanumeric(game_name);
     // finds possible save paths
     let paths = search::find_possible_save_paths(cleaned_name, dirs_to_check);
