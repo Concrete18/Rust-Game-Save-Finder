@@ -2,10 +2,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use aho_corasick::AhoCorasick;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use walkdir::WalkDir;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PossiblePath {
     pub path: String,
     pub score: i32,
@@ -13,7 +13,7 @@ pub struct PossiblePath {
 
 impl PossiblePath {
     fn new(path: String) -> Self {
-        let cleaned_path = path.to_string().replace('\\', "/");
+        let cleaned_path = path.replace('\\', "/");
         Self {
             path,
             score: score_path(cleaned_path),

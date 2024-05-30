@@ -84,13 +84,18 @@ button {
 
 .scroll {
   margin-top: 1em;
-  height: 136px;
+  height: 105px;
   /* width: 550px; */
   overflow-y: auto;
   border: 2px solid #ccc;
-  padding: 1px;
+  padding: 1em;
   border-radius: 3px;
   background-color: #212529;
+}
+
+.open-path-button {
+  margin-top: 10px;
+  margin-bottom: 5px;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -2,9 +2,26 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
 
+interface PossiblePath {
+  path: string,
+  score: number
+}
+
 function App() {
-  const [searchResult, setSearchResult] = useState<string[]>([]);
+  const [searchResult, setSearchResult] = useState<PossiblePath[]>([]);
   const [gameName, setGameName] = useState("");
+
+  const [selectedValue, setSelectedValue] = useState('');
+
+  const handleRadioChange = (e: any) => {
+    const value = e.target.value;
+    console.log(value)
+    setSelectedValue(value);
+  };
+
+  const openFilePath = async () => {
+    await invoke("open_path", { path: selectedValue })
+  };
 
   async function findSave() {
     // TODO switch to using a file for this
@@ -21,7 +38,7 @@ function App() {
     ]
 
     if (gameName) {
-      let saveLocation: string[] = await invoke("find_game_save_paths", { gameName, dirsToCheck })
+      let saveLocation: PossiblePath[] = await invoke("find_game_save_paths", { gameName, dirsToCheck })
       setSearchResult(saveLocation);
     } else {
       setSearchResult([]);
@@ -55,11 +72,27 @@ function App() {
           <p>Try searching for a game's save path.</p>
         </div>
       ) : (
-        // TODO make this scrollable
-        <div className="scroll">
-          {searchResult.map((path, index) => (
-            <p key={index}>{index+1}. {path}</p>
-          ))}
+        <div>
+          <div className="scroll">
+            {searchResult.map((item, index) => (
+              <div key={index}>
+                <label 
+                  style={index === 0 ? { fontWeight: 'bold', color: '#55ccff', padding: '5px' } : {}}>
+                  <input
+                    type="radio"
+                    name="radio-checkbox-list"
+                    value={item.path}
+                    style = {{padding: '1px'}}
+                    checked={selectedValue === item.path}
+                    defaultChecked={index === 0}
+                    onChange={handleRadioChange}
+                  />
+                  {item.path}
+                </label>
+              </div>
+            ))}
+          </div>
+          <button className="open-path-button" onClick={openFilePath} >Open Possible Save Path</button>
         </div>
       )}
 

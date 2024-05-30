@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "game-save-finder",
+    "productName": "Game Save Finder",
     "version": "0.0.0"
   },
   "tauri": {
@@ -21,7 +21,7 @@
       {
         "title": "Game Save Finder",
         "width": 600,
-        "height": 336
+        "height": 390
       }
     ],
     "security": {
