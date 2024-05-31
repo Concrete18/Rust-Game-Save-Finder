@@ -4,10 +4,7 @@ import { writeText } from '@tauri-apps/api/clipboard';
 import { appWindow } from '@tauri-apps/api/window'
 import "./App.css";
 
-interface PossiblePath {
-  path: string,
-  score: number
-}
+import {SavePathList, PossiblePath} from "./components/SavePathList";  // Import the new component
 
 function App() {
   const [gameName, setGameName] = useState("");
@@ -46,10 +43,10 @@ function App() {
   }
 
   useEffect(() => {
-    if (searchResult.length > 0 && selectedPath === "") {
+    if (searchResult.length > 0) {
       setSelectedPath(searchResult[0].path);
     }
-  }, [searchResult, selectedPath]);
+  }, [searchResult]);
 
   return (
     <div className="container">
@@ -68,7 +65,7 @@ function App() {
 
       <h1>Game Save Finder</h1>
 
-      <p>Type in the Game name that you want to find the save location for.</p>
+      <p>To find the save location, type in the Game's name.</p>
 
       <form
         className="row"
@@ -82,39 +79,29 @@ function App() {
           onChange={(e) => setGameName(e.currentTarget.value)}
           placeholder="Enter Game Name"
         />
-        <button type="submit">Save Search</button>
+        <button type="submit">Search</button>
       </form>
 
       {searchResult.length === 0 ? (
-        <div>
+        <div className="no-saves-desc">
           <h3>No Save Paths to Show.</h3>
           <p>Try searching for a game's save path.</p>
         </div>
       ) : (
-        <>
-          <div className="path-container scroll">
-            {searchResult.map((item, index) => (
-              <div key={index} className="path-item">
-                <label 
-                  style={index === 0 ? { fontWeight: 'bold', color: '#55ccff' } : {}}>
-                  <input
-                    type="radio"
-                    name="radio-checkbox-list"
-                    value={item.path}
-                    style = {{padding: '1px'}}
-                    checked={selectedPath === item.path}
-                    onChange={handleRadioChange}
-                  />
-                  {item.path}
-                </label>
-              </div>
-            ))}
+        <div className="save-display">
+          <div className="path-desc">
+            The highlighted entry is most likely the save path.
           </div>
+          <SavePathList
+            searchResult={searchResult}
+            selectedPath={selectedPath}
+            handleRadioChange={handleRadioChange}
+          />
           <div className="button-container">
-            <button className="bottom-button" onClick={openFilePath} >Open Possible Save Path</button>
-            <button className="bottom-button" onClick={copyToClipboard} >Copy to Clipboard</button>
+            <button className="bottom-button" onClick={openFilePath} >Open Path</button>
+            <button className="bottom-button" onClick={copyToClipboard} >Copy Path to Clipboard</button>
           </div>
-        </>
+        </div>
       )}
 
     </div>
