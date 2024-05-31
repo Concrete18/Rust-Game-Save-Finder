@@ -1,3 +1,25 @@
+.titlebar {
+  height: 30px;
+  background: #55ccff;
+  user-select: none;
+  display: flex;
+  justify-content: flex-end;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+.titlebar-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+}
+.titlebar-button:hover {
+  background: #5bbec3;
+}
+
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
@@ -15,11 +37,13 @@
 }
 
 .container {
-  margin: 0;
+  /* margin: 0; */
+  margin-top: 2em;
   display: flex;
   flex-direction: column;
   justify-content: center;
   text-align: center;
+  align-items: center;
 }
 
 .row {
@@ -83,14 +107,20 @@ button {
 }
 
 .scroll {
-  margin-top: 1em;
-  height: 105px;
-  /* width: 550px; */
   overflow-y: auto;
   border: 2px solid #ccc;
-  padding: 1em;
   border-radius: 3px;
   background-color: #212529;
+}
+
+.path-container {
+  padding: 1em;
+  margin-top: 1em;
+  height: 105px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 90%;
 }
 
 .bottom-button {

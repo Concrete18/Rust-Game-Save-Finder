@@ -16,6 +16,17 @@
         "all": false,
         "open": true
       },
+      "window": {
+        "all": false,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": false,
+        "minimize": true,
+        "unmaximize": false,
+        "unminimize": true,
+        "startDragging": true
+      },
       "clipboard": {
         "all": false,
         "writeText": true,
@@ -25,8 +36,9 @@
     "windows": [
       {
         "title": "Game Save Finder",
-        "width": 600,
-        "height": 390
+        "width": 700,
+        "height": 415,
+        "decorations": false
       }
     ],
     "security": {

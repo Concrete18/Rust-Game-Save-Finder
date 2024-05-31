@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { writeText } from '@tauri-apps/api/clipboard';
+import { appWindow } from '@tauri-apps/api/window'
 import "./App.css";
 
 interface PossiblePath {
@@ -12,6 +13,14 @@ function App() {
   const [gameName, setGameName] = useState("");
   const [searchResult, setSearchResult] = useState<PossiblePath[]>([]);
   const [selectedPath, setSelectedPath] = useState('');
+
+  const handleMinimize = async () => {
+    appWindow.minimize()
+  };
+
+  const handleClose = async () => {
+    appWindow.close()
+  };
 
   const handleRadioChange = (e: any) => {
     const value = e.target.value;
@@ -36,8 +45,27 @@ function App() {
     }
   }
 
+  useEffect(() => {
+    if (searchResult.length > 0 && selectedPath === "") {
+      setSelectedPath(searchResult[0].path);
+    }
+  }, [searchResult, selectedPath]);
+
   return (
     <div className="container">
+
+      <div data-tauri-drag-region className="titlebar">
+        <div className="titlebar-button" id="titlebar-minimize" onClick={handleMinimize}>
+          <img
+            src="https://api.iconify.design/mdi:window-minimize.svg"
+            alt="minimize"
+          />
+        </div>
+        <div className="titlebar-button" id="titlebar-close" onClick={handleClose}>
+          <img src="https://api.iconify.design/mdi:close.svg" alt="close" />
+        </div>
+      </div>
+
       <h1>Game Save Finder</h1>
 
       <p>Type in the Game name that you want to find the save location for.</p>
@@ -63,19 +91,18 @@ function App() {
           <p>Try searching for a game's save path.</p>
         </div>
       ) : (
-        <div>
-          <div className="scroll">
+        <>
+          <div className="path-container scroll">
             {searchResult.map((item, index) => (
-              <div key={index}>
+              <div key={index} className="path-item">
                 <label 
-                  style={index === 0 ? { fontWeight: 'bold', color: '#55ccff', padding: '5px' } : {}}>
+                  style={index === 0 ? { fontWeight: 'bold', color: '#55ccff' } : {}}>
                   <input
                     type="radio"
                     name="radio-checkbox-list"
                     value={item.path}
                     style = {{padding: '1px'}}
                     checked={selectedPath === item.path}
-                    defaultChecked={index === 0}
                     onChange={handleRadioChange}
                   />
                   {item.path}
@@ -87,7 +114,7 @@ function App() {
             <button className="bottom-button" onClick={openFilePath} >Open Possible Save Path</button>
             <button className="bottom-button" onClick={copyToClipboard} >Copy to Clipboard</button>
           </div>
-        </div>
+        </>
       )}
 
     </div>
