@@ -1,3 +1,4 @@
+/* Title bar */
 .titlebar {
   height: 30px;
   background: #55ccff;
@@ -9,6 +10,7 @@
   left: 0;
   right: 0;
 }
+
 .titlebar-button {
   display: inline-flex;
   justify-content: center;
@@ -16,10 +18,12 @@
   width: 30px;
   height: 30px;
 }
+
 .titlebar-button:hover {
   background: #5bbec3;
 }
 
+/* main app */
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
@@ -37,7 +41,6 @@
 }
 
 .container {
-  /* margin: 0; */
   margin-top: 2em;
   display: flex;
   flex-direction: column;
@@ -46,23 +49,10 @@
   align-items: center;
 }
 
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
 h1 {
   text-align: center;
+  margin-top: 15px;
+  margin-bottom: 5px;
 }
 
 input,
@@ -73,8 +63,8 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
+  color: #ffffff;
+  background-color: #313b4b;
   transition: border-color 0.25s;
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
 }
@@ -84,26 +74,21 @@ button {
 }
 
 button:hover {
-  border-color: #396cd8;
-  background-color: #00d1ff;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
+  color: #002a30;
+  background-color: #55ccff;
 }
 
-input,
-button {
-  outline: none;
+button:active {
+  color: #002a30;
+  background-color: #95dfff;
 }
 
 #game-input {
   margin-right: 10px;
-  color: #00d1ff;
 }
 
 #game-input::placeholder {
-  color: #b6b6b6;
+  color: #c2c2c2;
 }
 
 .scroll {
@@ -115,6 +100,8 @@ button {
 
 .no-saves-desc {
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .save-display {
@@ -157,22 +144,9 @@ button {
   margin-right: 10px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #15191d;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #313b4b;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
+.bottom-button.disabled {
+  cursor: not-allowed;
+  background-color: #232a36;
+  color: #888;
+  pointer-events: none;
 }

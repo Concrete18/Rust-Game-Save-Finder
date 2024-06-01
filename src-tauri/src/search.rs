@@ -109,6 +109,8 @@ pub fn score_paths(paths: Vec<String>) -> Vec<PossiblePath> {
     scored_paths
 }
 
+// TODO add function that searches for saves with games app id
+
 /// Finds possible save paths for `search_string` within `dirs_to_check`.
 pub fn find_possible_save_paths(search_string: String, dirs_to_check: Vec<String>) -> Vec<String> {
     let mut possible_paths = Vec::new();
@@ -121,17 +123,7 @@ pub fn find_possible_save_paths(search_string: String, dirs_to_check: Vec<String
     possible_paths
 }
 
-/// turns `string` into alphanumeric only.
-pub fn to_alphanumeric(string: String) -> String {
-    let mut cleaned_string = "".to_string();
-    for char in string.chars() {
-        if char.is_alphanumeric() || char == ' ' {
-            cleaned_string.push(char)
-        }
-    }
-    cleaned_string
-}
-
+// TODO move tests to their own folder
 #[cfg(test)]
 mod save_search_tests {
     use super::*;
@@ -170,13 +162,6 @@ mod save_search_tests {
         let path = "c:/users/michael/appdata/local/teardown".to_string();
         let score = score_path(path);
         assert!(score >= 225);
-    }
-
-    #[test]
-    fn convert_to_alphanumeric() {
-        let string = "Batman™: Arkham Knight".to_string();
-        let new_string = to_alphanumeric(string);
-        assert_eq!(new_string, "Batman Arkham Knight".to_string());
     }
 
     // #[test]

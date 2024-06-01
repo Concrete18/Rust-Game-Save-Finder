@@ -65,7 +65,7 @@ function App() {
 
       <h1>Game Save Finder</h1>
 
-      <p>To find the save location, type in the Game's name.</p>
+      <p>To find the possible save locations, type in the Game's name.</p>
 
       <form
         className="row"
@@ -79,15 +79,8 @@ function App() {
           onChange={(e) => setGameName(e.currentTarget.value)}
           placeholder="Enter Game Name"
         />
-        <button type="submit">Search</button>
+        <button type="submit" >Search</button>
       </form>
-
-      {searchResult.length === 0 ? (
-        <div className="no-saves-desc">
-          <h3>No Save Paths to Show.</h3>
-          <p>Try searching for a game's save path.</p>
-        </div>
-      ) : (
         <div className="save-display">
           <div className="path-desc">
             The highlighted entry is most likely the save path.
@@ -98,12 +91,10 @@ function App() {
             handleRadioChange={handleRadioChange}
           />
           <div className="button-container">
-            <button className="bottom-button" onClick={openFilePath} >Open Path</button>
-            <button className="bottom-button" onClick={copyToClipboard} >Copy Path to Clipboard</button>
+            <button className={`bottom-button ${searchResult.length == 0 ? 'disabled' : ''}`} onClick={openFilePath} disabled={searchResult.length == 0} >Open in Explorer</button>
+            <button className={`bottom-button ${searchResult.length == 0 ? 'disabled' : ''}`} onClick={copyToClipboard} disabled={searchResult.length == 0} >Copy to Clipboard</button>
           </div>
         </div>
-      )}
-
     </div>
   );
 }

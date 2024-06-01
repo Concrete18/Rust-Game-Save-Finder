@@ -4,6 +4,7 @@
 use std::cmp::Reverse;
 use std::process::Command;
 pub mod search;
+pub mod utils;
 
 #[tauri::command]
 fn open_path(path: String) {
@@ -32,7 +33,7 @@ fn find_game_save_paths(game_name: String) -> Vec<search::PossiblePath> {
     dirs_to_check.append(&mut extra_dirs);
 
     // TODO add errors checking
-    let cleaned_name = search::to_alphanumeric(game_name);
+    let cleaned_name = utils::to_alphanumeric(game_name);
     // finds possible save paths
     let paths = search::find_possible_save_paths(cleaned_name, dirs_to_check);
     let mut scored_paths: Vec<search::PossiblePath> = search::score_paths(paths);
