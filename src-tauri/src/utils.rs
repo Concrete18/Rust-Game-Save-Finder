@@ -1,3 +1,5 @@
+use regex::Regex;
+
 /// turns `string` into alphanumeric only.
 pub fn to_alphanumeric(string: String) -> String {
     let mut cleaned_string = "".to_string();
@@ -9,9 +11,22 @@ pub fn to_alphanumeric(string: String) -> String {
     cleaned_string
 }
 
+pub fn count_occurrences(haystack: &str, needle: &str) -> usize {
+    let re = Regex::new(&regex::escape(needle)).unwrap();
+    re.find_iter(haystack).count()
+}
+
 #[cfg(test)]
 mod save_search_tests {
     use super::*;
+
+    #[test]
+    fn test_count_occurrences() {
+        let haystack = "c:/users/michael/appdata/local/teardown/teardown_mods";
+        let needle = "teardown";
+        let count = count_occurrences(haystack, needle);
+        assert_eq!(count, 2);
+    }
 
     #[test]
     fn convert_to_alphanumeric() {

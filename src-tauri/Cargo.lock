@@ -939,6 +939,7 @@ name = "game-save-finder"
 version = "0.0.0"
 dependencies = [
  "aho-corasick",
+ "regex",
  "serde",
  "serde_json",
  "tauri",

@@ -28,7 +28,7 @@ Installer will be found in the following folder.
 
 ## Todo
 
-- Replace title bar so maximize button no longer exists
+- None
 
 ## Issues
 
