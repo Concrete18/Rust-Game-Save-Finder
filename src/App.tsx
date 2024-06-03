@@ -4,12 +4,12 @@ import { writeText } from '@tauri-apps/api/clipboard';
 import { appWindow } from '@tauri-apps/api/window'
 import "./App.css";
 
-import {SavePathList, PossiblePath} from "./components/SavePathList";  // Import the new component
+import {SaveDirList, PossibleDir} from "./components/SaveDirList";  // Import the new component
 
 function App() {
   const [gameName, setGameName] = useState("");
-  const [searchResult, setSearchResult] = useState<PossiblePath[]>([]);
-  const [selectedPath, setSelectedPath] = useState('');
+  const [searchResult, setSearchResult] = useState<PossibleDir[]>([]);
+  const [selectedDir, setSelectedDir] = useState('');
 
   const handleMinimize = async () => {
     appWindow.minimize()
@@ -22,21 +22,21 @@ function App() {
   const handleRadioChange = (e: any) => {
     const value = e.target.value;
     console.log(value)
-    setSelectedPath(value);
+    setSelectedDir(value);
   };
 
   const openFilePath = async () => {
-    await invoke("open_path", { path: selectedPath })
+    await invoke("open_path", { path: selectedDir })
   };
 
   const copyToClipboard = async () => {
-    await writeText(selectedPath)
+    await writeText(selectedDir)
   };
 
   async function findSave() {
     if (gameName) {
-      let saveLocation: PossiblePath[] = await invoke("find_game_save_paths", { gameName })
-      setSearchResult(saveLocation);
+      let saveDir: PossibleDir[] = await invoke("find_save_dirs", { gameName })
+      setSearchResult(saveDir);
     } else {
       setSearchResult([]);
     }
@@ -44,7 +44,7 @@ function App() {
 
   useEffect(() => {
     if (searchResult.length > 0) {
-      setSelectedPath(searchResult[0].path);
+      setSelectedDir(searchResult[0].path);
     }
   }, [searchResult]);
 
@@ -65,7 +65,7 @@ function App() {
 
       <h1>Game Save Finder</h1>
 
-      <p>To find the possible save locations, type in the Game's name.</p>
+      <p>To find the possible save directories, type in the Game's name.</p>
 
       <form
         className="row"
@@ -83,11 +83,11 @@ function App() {
       </form>
         <div className="save-display">
           <div className="path-desc">
-            The highlighted entry is most likely the save path.
+            The highlighted entry is most likely the save directory.
           </div>
-          <SavePathList
+          <SaveDirList
             searchResult={searchResult}
-            selectedPath={selectedPath}
+            selectedDir={selectedDir}
             handleRadioChange={handleRadioChange}
           />
           <div className="button-container">

@@ -1,17 +1,17 @@
 import React from "react";
 
-export interface PossiblePath {
+export interface PossibleDir {
   path: string,
   score: number
 }
 
-export interface SavePathListProps {
-  searchResult: PossiblePath[];
-  selectedPath: string;
+export interface SaveDirListProps {
+  searchResult: PossibleDir[];
+  selectedDir: string;
   handleRadioChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const SavePathList: React.FC<SavePathListProps> = ({ searchResult, selectedPath, handleRadioChange }) => {
+export const SaveDirList: React.FC<SaveDirListProps> = ({ searchResult, selectedDir, handleRadioChange }) => {
   return (
     <div className="path-container scroll">
       {searchResult.length === 0 ? (
@@ -41,8 +41,7 @@ export const SavePathList: React.FC<SavePathListProps> = ({ searchResult, select
                   type="radio"
                   name="radio-checkbox-list"
                   value={item.path}
-                  style={{ padding: '1px' }}
-                  checked={selectedPath === item.path}
+                  checked={selectedDir === item.path}
                   onChange={handleRadioChange}
                 />
                 {item.path}

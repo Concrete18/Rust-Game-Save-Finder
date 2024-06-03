@@ -17,7 +17,7 @@ pub fn count_occurrences(haystack: &str, needle: &str) -> usize {
 }
 
 #[cfg(test)]
-mod save_search_tests {
+mod utils_tests {
     use super::*;
 
     #[test]
