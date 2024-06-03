@@ -1,7 +1,7 @@
 import React from "react";
 
 export interface PossibleDir {
-  path: string,
+  directory: string,
   score: number
 }
 
@@ -26,7 +26,7 @@ export const SaveDirList: React.FC<SaveDirListProps> = ({ searchResult, selected
               style={{ padding: '1px' }}
               onChange={handleRadioChange} 
             />
-            Try searching for a game's save path above.
+            Try searching for a game's save directory above.
           </label>
         </div>
       ) : (
@@ -40,11 +40,11 @@ export const SaveDirList: React.FC<SaveDirListProps> = ({ searchResult, selected
                 <input
                   type="radio"
                   name="radio-checkbox-list"
-                  value={item.path}
-                  checked={selectedDir === item.path}
+                  value={item.directory}
+                  checked={selectedDir === item.directory}
                   onChange={handleRadioChange}
                 />
-                {item.path}
+                {item.directory}
               </label>
             </div>
           ))}

@@ -8,79 +8,20 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct PossiblePath {
-    pub path: String,
+pub struct PossibleDir {
+    pub directory: String,
     pub score: i32,
 }
 
-impl PossiblePath {
-    pub fn new(path: String) -> Self {
-        // TODO see cleaned_path if this is needed
-        let cleaned_path = path.replace('\\', "/");
-        Self {
-            path,
-            score: score_path(cleaned_path),
-        }
+impl PossibleDir {
+    pub fn new(directory: String) -> Self {
+        let score = score_dir(&directory);
+        Self { directory, score }
     }
 }
 
-fn normalize_path(input_path: &std::path::Path, target_segment: &str) -> String {
-    // Split the path into components
-    let mut components = input_path.components().peekable();
-    let mut result_path = PathBuf::new();
-
-    // Reconstruct the path up to and including the target segment
-    while let Some(component) = components.next() {
-        result_path.push(component);
-        if let Some(next_component) = components.peek() {
-            if next_component.as_os_str() == target_segment {
-                result_path.push(next_component);
-                break;
-            }
-        }
-    }
-
-    result_path
-        .to_string_lossy()
-        .to_lowercase()
-        .replace('\\', "/")
-        .to_string()
-}
-
-/// Finds matches for `search_string` in `path`.
-fn search_path(path: String, search_string: String) -> Vec<String> {
-    let mut found_paths: Vec<String> = Vec::new();
-    // TODO see if walkDir can have files filtered out
-    for path in WalkDir::new(path)
-        .max_depth(2)
-        .into_iter()
-        .filter_map(|e| e.ok())
-    {
-        // TODO check if this can be improved
-        let cur_path = path.path();
-
-        let norm_path = normalize_path(cur_path, &search_string);
-
-        // creates path variations
-        let with_space_string = &search_string.to_lowercase();
-        let with_space = norm_path.contains(with_space_string);
-        let without_space = norm_path.contains(&with_space_string.replace(' ', ""));
-        let with_underscore = norm_path.contains(&with_space_string.replace(' ', "_"));
-        // sets return value
-        if with_space || without_space || with_underscore {
-            println!("{norm_path}");
-            // TODO make sure path is ignored if the base path already exists in found_paths
-            if utils::count_occurrences(&norm_path, &search_string) != 1 {
-                continue;
-            }
-            found_paths.push(norm_path);
-        }
-    }
-    found_paths
-}
-
-/// Scores path points based on occurrences of
-fn score_path(path: String) -> i32 {
+/// Scores based on occurrences of contents of the directory
+fn score_dir(directory: &String) -> i32 {
     // positive scoring array
     const SCORE_POS: [&str; 20] = [
         "autosave",
@@ -104,14 +45,14 @@ fn score_path(path: String) -> i32 {
         ".dat",
         "profile",
     ];
-    let ac_pos = AhoCorasick::new(SCORE_POS).unwrap();
+    let ac_pos: AhoCorasick = AhoCorasick::new(SCORE_POS).unwrap();
     // negative scoring array
     const SCORE_NEG: [&str; 4] = ["nvidia", ".exe", ".dll", ".assets"];
-    let ac_neg = AhoCorasick::new(SCORE_NEG).unwrap();
+    let ac_neg: AhoCorasick = AhoCorasick::new(SCORE_NEG).unwrap();
     // get total score
     let mut total_score = 0;
-    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
-        let cur_path = String::from(entry.path().to_string_lossy()).to_lowercase();
+    for dir in WalkDir::new(directory).into_iter().filter_map(|e| e.ok()) {
+        let cur_path: String = String::from(dir.path().to_string_lossy()).to_lowercase();
 
         for _match in ac_pos.find_iter(&cur_path) {
             total_score += 25;
@@ -124,33 +65,84 @@ fn score_path(path: String) -> i32 {
     total_score
 }
 
-// Define a struct to hold the string and its associated number
+fn normalize_path(input_path: &std::path::Path, target_segment: &str) -> String {
+    // split the path into components
+    let mut components: std::iter::Peekable<std::path::Components> =
+        input_path.components().peekable();
+    let mut result_path: PathBuf = PathBuf::new();
 
-pub fn score_paths(paths: Vec<String>) -> Vec<PossiblePath> {
-    let mut scored_paths = Vec::new();
-    for path in &paths {
-        if path.contains('.') {
+    // reconstruct the path up to and including the target segment
+    while let Some(component) = components.next() {
+        result_path.push(component);
+        if let Some(next_component) = components.peek() {
+            if next_component.as_os_str() == target_segment {
+                result_path.push(next_component);
+                break;
+            }
+        }
+    }
+
+    result_path
+        .to_string_lossy()
+        .to_lowercase()
+        .replace('\\', "/")
+        .to_string()
+}
+
+/// Finds matches for `search_string` in `path`.
+fn search_dir(directory: String, search_string: String) -> Vec<String> {
+    let mut found_dirs: Vec<String> = Vec::new();
+    // TODO see if walkDir can have files filtered out
+    for directory in WalkDir::new(directory)
+        .max_depth(2)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
+        let norm_path: String = normalize_path(directory.path(), &search_string);
+        // creates directory variations
+        let with_space_string: &String = &search_string.to_lowercase();
+        let with_space: bool = norm_path.contains(with_space_string);
+        let without_space: bool = norm_path.contains(&with_space_string.replace(' ', ""));
+        let with_underscore: bool = norm_path.contains(&with_space_string.replace(' ', "_"));
+        // sets return value
+        if with_space || without_space || with_underscore {
+            println!("{norm_path}");
+            if utils::count_occurrences(&norm_path, with_space_string) != 1 {
+                continue;
+            }
+            found_dirs.push(norm_path);
+        }
+    }
+    // TODO remove paths that contain another path as a substring
+
+    found_dirs
+}
+
+pub fn score_dirs(dirs: Vec<String>) -> Vec<PossibleDir> {
+    let mut scored_dirs = Vec::new();
+    for dir in &dirs {
+        if dir.contains('.') {
             continue;
         }
-        let scored_path = PossiblePath::new(path.to_string());
-        scored_paths.push(scored_path);
+        let scored_directory = PossibleDir::new(dir.to_string());
+        scored_dirs.push(scored_directory);
     }
-    scored_paths
+    scored_dirs
 }
 
 // TODO add function that searches for saves with games app id
 
 /// Finds possible save paths for `search_string` within `dirs_to_check`.
-pub fn find_possible_save_paths(search_string: String, dirs_to_check: Vec<String>) -> Vec<String> {
-    let mut possible_paths = Vec::new();
-    for dir in dirs_to_check {
-        let found_paths = search_path(dir, search_string.to_string());
-        if found_paths.is_empty() {
+pub fn find_possible_save_dirs(search_string: String, dirs_to_check: Vec<String>) -> Vec<String> {
+    let mut possible_dirs: Vec<String> = Vec::new();
+    for directory in dirs_to_check {
+        let found_dirs: Vec<String> = search_dir(directory, search_string.to_string());
+        if found_dirs.is_empty() {
             continue;
         }
-        possible_paths.extend(found_paths);
+        possible_dirs.extend(found_dirs);
     }
-    possible_paths
+    possible_dirs
 }
 
 pub fn get_directories() -> Vec<String> {
@@ -179,8 +171,8 @@ mod search_tests {
     use std::path::Path;
 
     /// returns dirs for tests
-    pub fn find_dirs_to_check() -> Vec<String> {
-        let dirs_to_check = vec![
+    pub fn get_test_dirs() -> Vec<String> {
+        let dirs_to_check: Vec<String> = vec![
             "C:/Program Files (x86)/Steam/steamapps/common".to_string(),
             "P:/SteamLibrary/steamapps/common/".to_string(),
             "C:/Users/Michael/AppData/LocalLow".to_string(),
@@ -197,47 +189,46 @@ mod search_tests {
     #[test]
     fn find_possible_save_paths_test() {
         let string: String = "Cyberpunk 2077".to_string();
-        let dirs_to_check: Vec<String> = find_dirs_to_check();
-        let paths: Vec<String> = find_possible_save_paths(string, dirs_to_check);
+        let dirs_to_check: Vec<String> = get_test_dirs();
+        let dirs: Vec<String> = find_possible_save_dirs(string, dirs_to_check);
         let answer: [&str; 3] = [
             "c:/users/michael/appdata/local/cd projekt red/cyberpunk 2077",
             "c:/users/michael/saved games/cd projekt red/cyberpunk 2077",
             "d:/my documents/cd projekt red/cyberpunk 2077",
         ];
-        assert_eq!(paths, answer);
+        assert_eq!(dirs, answer);
     }
 
     #[test]
-    fn test_search_path() {
-        let search_string: String = "Deep Rock Galactic".to_string();
-        let path: String = "C:/Program Files (x86)/Steam/steamapps/common".to_string();
-        let found_paths: Vec<String> = search_path(path, search_string);
+    fn test_search_dir() {
+        let search_string: String = "deep rock galactic".to_string();
+        let directory: String = "p:/steamlibrary/steamapps/common".to_string();
+        let found_dirs: Vec<String> = search_dir(directory, search_string);
 
-        let answer: [&str; 1] =
-            ["c:/program files (x86)/steam/steamapps/common/deep rock galactic"];
+        let answer: [&str; 1] = ["p:/steamlibrary/steamapps/common/deep rock galactic"];
 
         // let test = [
-        //         "c:/program files (x86)/steam/steamapps/common\\deep rock galactic",
-        //         "c:/program files (x86)/steam/steamapps/common\\deep rock galactic\\engine",
-        //         "c:/program files (x86)/steam/steamapps/common\\deep rock galactic\\fsd.exe",
-        //     ];
+        //     "p:/steamlibrary/steamapps/common/deep rock galactic",
+        //     "p:/steamlibrary/steamapps/common/deep rock galactic/engine",
+        //     "p:/steamlibrary/steamapps/common/deep rock galactic/fsd",
+        // ];
 
-        assert_eq!(found_paths, answer);
+        assert_eq!(found_dirs, answer);
     }
 
     #[test]
     fn test_normalize_path() {
         const TARGET_SEGMENT: &str = "teardown";
-        let path = Path::new("c:/users/michael/appdata/local/teardown\\test");
-        let path_string = normalize_path(path, TARGET_SEGMENT);
-        let answer = "c:/users/michael/appdata/local/teardown";
+        let path: &Path = Path::new("c:/users/michael/appdata/local/teardown\\test");
+        let path_string: String = normalize_path(path, TARGET_SEGMENT);
+        let answer: &str = "c:/users/michael/appdata/local/teardown";
         assert_eq!(path_string, answer);
     }
 
     #[test]
-    fn test_score_path() {
-        let path = "c:/users/michael/appdata/local/teardown".to_string();
-        let score = score_path(path);
+    fn test_score_dir() {
+        let directory: String = "c:/users/michael/appdata/local/teardown".to_string();
+        let score: i32 = score_dir(&directory);
         assert!(score >= 225);
     }
 }

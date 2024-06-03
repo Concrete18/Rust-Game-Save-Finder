@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "Game Save Finder",
-    "version": "0.0.0"
+    "version": "0.4.0"
   },
   "tauri": {
     "allowlist": {
@@ -37,7 +37,7 @@
       {
         "title": "Game Save Finder",
         "width": 700,
-        "height": 413,
+        "height": 420,
         "decorations": false
       }
     ],

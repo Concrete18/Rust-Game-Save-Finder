@@ -44,7 +44,7 @@ function App() {
 
   useEffect(() => {
     if (searchResult.length > 0) {
-      setSelectedDir(searchResult[0].path);
+      setSelectedDir(searchResult[0].directory);
     }
   }, [searchResult]);
 
