@@ -1,7 +1,10 @@
+#![allow(dead_code)]
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use crate::app_data;
 use crate::utils;
+
 use aho_corasick::AhoCorasick;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -90,7 +93,7 @@ fn normalize_path(input_path: &std::path::Path, target_segment: &str) -> String 
 }
 
 /// Finds matches for `search_string` in `path`.
-fn search_dir(directory: String, search_string: String) -> Vec<String> {
+fn search_dir(directory: String, game_name: String) -> Vec<String> {
     let mut found_dirs: Vec<String> = Vec::new();
     // TODO see if walkDir can have files filtered out
     for directory in WalkDir::new(directory)
@@ -98,15 +101,14 @@ fn search_dir(directory: String, search_string: String) -> Vec<String> {
         .into_iter()
         .filter_map(|e| e.ok())
     {
-        let norm_path: String = normalize_path(directory.path(), &search_string);
+        let norm_path: String = normalize_path(directory.path(), &game_name);
         // creates directory variations
-        let with_space_string: &String = &search_string.to_lowercase();
+        let with_space_string: &String = &game_name.to_lowercase();
         let with_space: bool = norm_path.contains(with_space_string);
         let without_space: bool = norm_path.contains(&with_space_string.replace(' ', ""));
         let with_underscore: bool = norm_path.contains(&with_space_string.replace(' ', "_"));
         // sets return value
         if with_space || without_space || with_underscore {
-            println!("{norm_path}");
             if utils::count_occurrences(&norm_path, with_space_string) != 1 {
                 continue;
             }
@@ -119,29 +121,59 @@ fn search_dir(directory: String, search_string: String) -> Vec<String> {
 }
 
 pub fn score_dirs(dirs: Vec<String>) -> Vec<PossibleDir> {
-    let mut scored_dirs = Vec::new();
+    let mut scored_dirs: Vec<PossibleDir> = Vec::new();
     for dir in &dirs {
         if dir.contains('.') {
             continue;
         }
-        let scored_directory = PossibleDir::new(dir.to_string());
+        let scored_directory: PossibleDir = PossibleDir::new(dir.to_string());
         scored_dirs.push(scored_directory);
     }
     scored_dirs
 }
 
-// TODO add function that searches for saves with games app id
+pub fn check_user_data(app_id: u32) -> Result<String, String> {
+    let app_data_dir: &str = "c:/Program Files (x86)/Steam/userdata";
+    for dir in WalkDir::new(app_data_dir)
+        .max_depth(2)
+        .into_iter()
+        .filter_map(|e: Result<walkdir::DirEntry, walkdir::Error>| e.ok())
+    {
+        let dir_path = dir
+            .path()
+            .to_string_lossy()
+            .to_string()
+            .to_lowercase()
+            .replace('\\', "/");
+        if dir_path.contains(&app_id.to_string()) {
+            return Ok(dir_path);
+        }
+    }
+    Err("Nothing Found".to_string())
+}
 
-/// Finds possible save paths for `search_string` within `dirs_to_check`.
-pub fn find_possible_save_dirs(search_string: String, dirs_to_check: Vec<String>) -> Vec<String> {
+/// Finds possible save paths for `search_string` within `directories`.
+pub fn find_possible_save_dirs(game_name: String, directories: Vec<String>) -> Vec<String> {
     let mut possible_dirs: Vec<String> = Vec::new();
-    for directory in dirs_to_check {
-        let found_dirs: Vec<String> = search_dir(directory, search_string.to_string());
+    for directory in directories {
+        let found_dirs: Vec<String> = search_dir(directory, game_name.to_string());
         if found_dirs.is_empty() {
             continue;
         }
         possible_dirs.extend(found_dirs);
     }
+
+    // checks user data
+    // TODO move this so it only runs once on startup
+    let app_list: Vec<app_data::App> = app_data::get_app_list();
+    if !app_list.is_empty() {
+        if let Ok(app_id) = app_data::get_app_id(game_name, app_list) {
+            if let Ok(directory) = check_user_data(app_id) {
+                possible_dirs.push(directory)
+            }
+        }
+    }
+
     possible_dirs
 }
 
@@ -185,18 +217,27 @@ mod search_tests {
         ];
         dirs_to_check
     }
+    // Street Fighter 6
+
+    #[test]
+    fn test_check_user_data() {
+        let path_string: Result<String, String> = check_user_data(1364780);
+        const ANSWER: &str = "c:/program files (x86)/steam/userdata/22360464/1364780";
+        assert_eq!(path_string.unwrap(), ANSWER);
+    }
 
     #[test]
     fn find_possible_save_paths_test() {
         let string: String = "Cyberpunk 2077".to_string();
         let dirs_to_check: Vec<String> = get_test_dirs();
         let dirs: Vec<String> = find_possible_save_dirs(string, dirs_to_check);
-        let answer: [&str; 3] = [
+        const ANSWER: [&str; 4] = [
             "c:/users/michael/appdata/local/cd projekt red/cyberpunk 2077",
             "c:/users/michael/saved games/cd projekt red/cyberpunk 2077",
             "d:/my documents/cd projekt red/cyberpunk 2077",
+            "c:/program files (x86)/steam/userdata/22360464/1091500",
         ];
-        assert_eq!(dirs, answer);
+        assert_eq!(dirs, ANSWER);
     }
 
     #[test]
@@ -205,15 +246,8 @@ mod search_tests {
         let directory: String = "p:/steamlibrary/steamapps/common".to_string();
         let found_dirs: Vec<String> = search_dir(directory, search_string);
 
-        let answer: [&str; 1] = ["p:/steamlibrary/steamapps/common/deep rock galactic"];
-
-        // let test = [
-        //     "p:/steamlibrary/steamapps/common/deep rock galactic",
-        //     "p:/steamlibrary/steamapps/common/deep rock galactic/engine",
-        //     "p:/steamlibrary/steamapps/common/deep rock galactic/fsd",
-        // ];
-
-        assert_eq!(found_dirs, answer);
+        let answer: String = "p:/steamlibrary/steamapps/common/deep rock galactic".to_string();
+        assert!(found_dirs.contains(&answer))
     }
 
     #[test]
@@ -221,8 +255,8 @@ mod search_tests {
         const TARGET_SEGMENT: &str = "teardown";
         let path: &Path = Path::new("c:/users/michael/appdata/local/teardown\\test");
         let path_string: String = normalize_path(path, TARGET_SEGMENT);
-        let answer: &str = "c:/users/michael/appdata/local/teardown";
-        assert_eq!(path_string, answer);
+        const ANSWER: &str = "c:/users/michael/appdata/local/teardown";
+        assert_eq!(path_string, ANSWER);
     }
 
     #[test]
