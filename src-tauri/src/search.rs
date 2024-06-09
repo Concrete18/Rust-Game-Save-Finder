@@ -123,7 +123,7 @@ pub fn search_dir(directory: String, game_name: &str) -> Vec<String> {
             found_dirs.push(path_string);
         }
     }
-    // TODO check if this needs changes due to removing of deeper and more accurate folder suggestions
+    // TODO check if this needs changes due to removal of deeper and more accurate folder suggestions
     remove_duplicate_dirs(found_dirs)
 }
 

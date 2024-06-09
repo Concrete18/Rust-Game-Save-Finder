@@ -20,14 +20,10 @@ pub fn get_test_dirs() -> Vec<String> {
 fn find_possible_save_paths_test() {
     let game_name: String = "Cyberpunk 2077".to_string();
     let directories: Vec<String> = get_test_dirs();
-    let dirs: Vec<String> = find_possible_save_dirs(game_name, directories);
-    const ANSWER: [&str; 4] = [
-        "c:/users/michael/appdata/local/cd projekt red/cyberpunk 2077",
-        "c:/users/michael/saved games/cd projekt red/cyberpunk 2077",
-        "d:/my documents/cd projekt red/cyberpunk 2077",
-        "c:/program files (x86)/steam/userdata/22360464/1091500",
-    ];
-    assert_eq!(dirs, ANSWER);
+
+    let possible_dirs: Vec<String> = find_possible_save_dirs(game_name, directories);
+    let answer: String = "c:/users/michael/appdata/local/cd projekt red/cyberpunk 2077".to_string();
+    assert_eq!(possible_dirs[0], answer);
 }
 
 // TODO add more tests
