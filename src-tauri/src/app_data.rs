@@ -1,16 +1,16 @@
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct AppListResponse {
     pub applist: AppList,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct AppList {
     pub apps: Vec<App>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, PartialEq, Clone)]
 pub struct App {
     appid: u32,
     name: String,

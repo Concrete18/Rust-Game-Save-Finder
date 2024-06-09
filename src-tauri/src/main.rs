@@ -1,12 +1,18 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use once_cell::sync::Lazy;
 use std::cmp::Reverse;
 use std::process::Command;
+use std::sync::Mutex;
 
 mod app_data;
 mod search;
 mod utils;
+
+// defines APP_LIST on start for use later for getting games app id's
+static APP_LIST: Lazy<Mutex<Vec<app_data::App>>> =
+    Lazy::new(|| Mutex::new(app_data::get_app_list()));
 
 #[tauri::command]
 fn open_path(path: String) {
@@ -28,6 +34,8 @@ fn find_save_dirs(game_name: String) -> Vec<search::PossibleDir> {
 }
 
 fn main() {
+    let _ = Lazy::force(&APP_LIST);
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![find_save_dirs, open_path])
         .run(tauri::generate_context!())

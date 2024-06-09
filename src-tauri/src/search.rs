@@ -4,6 +4,7 @@
 
 use crate::app_data;
 use crate::utils;
+use crate::APP_LIST;
 
 use aho_corasick::AhoCorasick;
 use serde::{Deserialize, Serialize};
@@ -177,9 +178,10 @@ pub fn find_possible_save_dirs(game_name: String, directories: Vec<String>) -> V
         possible_dirs.extend(found_dirs);
     }
 
+    // TODO check what happens when it fails
+    let app_list = APP_LIST.lock().unwrap().to_vec();
+
     // checks user data
-    // TODO move this so it only runs once on startup
-    let app_list: Vec<app_data::App> = app_data::get_app_list();
     if !app_list.is_empty() {
         if let Ok(app_id) = app_data::get_app_id(game_name, app_list) {
             if let Ok(directory) = check_user_data(app_id) {

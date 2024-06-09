@@ -955,6 +955,7 @@ name = "game-save-finder"
 version = "0.0.0"
 dependencies = [
  "aho-corasick",
+ "once_cell",
  "regex",
  "reqwest",
  "serde",
