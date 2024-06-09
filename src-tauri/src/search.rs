@@ -26,7 +26,7 @@ impl PossibleDir {
 }
 
 /// Scores based on occurrences of contents of the directory.
-fn score_dir(directory: &String) -> i32 {
+pub fn score_dir(directory: &String) -> i32 {
     // positive scoring array
     const SCORE_POS: [&str; 20] = [
         "autosave",
@@ -72,7 +72,7 @@ fn score_dir(directory: &String) -> i32 {
 
 /// Returns a new vector with duplicate directories removed.
 /// Directories containting a smaller directrory as a substring count as duplicate.
-fn remove_duplicate_dirs(mut directories: Vec<String>) -> Vec<String> {
+pub fn remove_duplicate_dirs(mut directories: Vec<String>) -> Vec<String> {
     directories.sort();
     let mut unique_dirs: HashSet<String> = HashSet::new();
 
@@ -95,7 +95,7 @@ fn remove_duplicate_dirs(mut directories: Vec<String>) -> Vec<String> {
 }
 
 /// Finds matches for `search_string` in `path`.
-fn search_dir(directory: String, game_name: &str) -> Vec<String> {
+pub fn search_dir(directory: String, game_name: &str) -> Vec<String> {
     let mut found_dirs: Vec<String> = Vec::new();
     for directory in WalkDir::new(directory)
         .max_depth(2)
@@ -211,77 +211,4 @@ pub fn get_directories() -> Vec<String> {
     ];
     directories.append(&mut extra_dirs);
     directories
-}
-
-#[cfg(test)]
-mod search_tests {
-    use super::*;
-
-    /// returns dirs for tests.
-    pub fn get_test_dirs() -> Vec<String> {
-        let dirs_to_check: Vec<String> = vec![
-            "C:/Program Files (x86)/Steam/steamapps/common".to_string(),
-            "P:/SteamLibrary/steamapps/common/".to_string(),
-            "C:/Users/Michael/AppData/LocalLow".to_string(),
-            "C:/Users/Michael/AppData/Roaming".to_string(),
-            "C:/Users/Michael/AppData/Local".to_string(),
-            "C:/Users/Michael/Saved Games".to_string(),
-            "C:/Users/Michael/Documents".to_string(),
-            "D:/My Installed Games/Steam Games/steamapps/common".to_string(),
-            "D:/My Documents".to_string(),
-        ];
-        dirs_to_check
-    }
-    // Street Fighter 6
-
-    #[test]
-    fn test_check_user_data() {
-        let path_string: Result<String, String> = check_user_data(1364780);
-        const ANSWER: &str = "c:/program files (x86)/steam/userdata/22360464/1364780";
-        assert_eq!(path_string.unwrap(), ANSWER);
-    }
-
-    #[test]
-    fn find_possible_save_paths_test() {
-        let string: String = "Cyberpunk 2077".to_string();
-        let dirs_to_check: Vec<String> = get_test_dirs();
-        let dirs: Vec<String> = find_possible_save_dirs(string, dirs_to_check);
-        const ANSWER: [&str; 4] = [
-            "c:/users/michael/appdata/local/cd projekt red/cyberpunk 2077",
-            "c:/users/michael/saved games/cd projekt red/cyberpunk 2077",
-            "d:/my documents/cd projekt red/cyberpunk 2077",
-            "c:/program files (x86)/steam/userdata/22360464/1091500",
-        ];
-        assert_eq!(dirs, ANSWER);
-    }
-
-    #[test]
-    fn test_remove_duplicate_dirs() {
-        let directories: Vec<String> = vec![
-            "p:/steamlibrary/steamapps/common".to_string(),
-            "p:/steamlibrary/steamapps/common/test1".to_string(),
-            "p:/steamlibrary/steamapps/common/test1/test2".to_string(),
-        ];
-        let final_dirs: Vec<String> = remove_duplicate_dirs(directories);
-
-        let answer: Vec<String> = vec!["p:/steamlibrary/steamapps/common".to_string()];
-        assert_eq!(final_dirs, answer);
-    }
-
-    #[test]
-    fn test_search_dir() {
-        let search_string: String = "deep rock galactic".to_string();
-        let directory: String = "p:/steamlibrary/steamapps/common".to_string();
-        let found_dirs: Vec<String> = search_dir(directory, &search_string);
-
-        let answer: String = "p:/steamlibrary/steamapps/common/deep rock galactic".to_string();
-        assert!(found_dirs.contains(&answer))
-    }
-
-    #[test]
-    fn test_score_dir() {
-        let directory: String = "c:/users/michael/appdata/local/teardown".to_string();
-        let score: i32 = score_dir(&directory);
-        assert!(score >= 225);
-    }
 }

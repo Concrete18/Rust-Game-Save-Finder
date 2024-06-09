@@ -41,3 +41,11 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+mod tests {
+    mod test_app_data;
+    mod test_local_save_searches;
+    mod test_search;
+    mod test_utils;
+}
