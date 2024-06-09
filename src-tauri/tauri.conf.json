@@ -35,10 +35,12 @@
     },
     "windows": [
       {
+        "label": "main",
         "title": "Game Save Finder",
         "width": 700,
         "height": 420,
-        "decorations": false
+        "decorations": false,
+        "resizable": false
       }
     ],
     "security": {
