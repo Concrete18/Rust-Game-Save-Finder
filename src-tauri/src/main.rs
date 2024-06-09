@@ -14,15 +14,11 @@ fn open_path(path: String) {
     Command::new("explorer").arg(window_path).spawn().unwrap();
 }
 
-/// finds the game saves
+/// finds the game save directories.
 #[tauri::command]
 fn find_save_dirs(game_name: String) -> Vec<search::PossibleDir> {
     let directories: Vec<String> = search::get_directories();
-
-    // TODO add errors checking
-    let cleaned_name: String = utils::to_alphanumeric(game_name);
-    // finds possible save paths
-    let dirs: Vec<String> = search::find_possible_save_dirs(cleaned_name, directories);
+    let dirs: Vec<String> = search::find_possible_save_dirs(game_name, directories);
     let mut scored_dirs: Vec<search::PossibleDir> = search::score_dirs(dirs);
 
     // Sort the scored paths by score in descending order

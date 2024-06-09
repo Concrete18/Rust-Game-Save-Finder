@@ -35,6 +35,7 @@ function App() {
 
   async function findSave() {
     if (gameName) {
+      // TODO add progress indicator while running
       let saveDir: PossibleDir[] = await invoke("find_save_dirs", { gameName })
       setSearchResult(saveDir);
     } else {

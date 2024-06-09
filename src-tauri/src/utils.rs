@@ -1,8 +1,8 @@
 use regex::Regex;
 
-/// turns `string` into alphanumeric only.
-pub fn to_alphanumeric(string: String) -> String {
-    let mut cleaned_string = "".to_string();
+/// turns `string` into String with alphanumeric characters only.
+pub fn to_alphanumeric(string: &str) -> String {
+    let mut cleaned_string: String = String::new();
     for char in string.chars() {
         if char.is_alphanumeric() || char == ' ' {
             cleaned_string.push(char)
@@ -31,7 +31,7 @@ mod utils_tests {
     #[test]
     fn convert_to_alphanumeric() {
         let string = "Batman™: Arkham Knight".to_string();
-        let new_string = to_alphanumeric(string);
+        let new_string = to_alphanumeric(&string);
         assert_eq!(new_string, "Batman Arkham Knight".to_string());
     }
 }
